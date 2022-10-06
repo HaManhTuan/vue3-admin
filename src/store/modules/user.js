@@ -1,16 +1,21 @@
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
+import constants from "@/utils/constants";
 
 const state = {
   token: getToken(),
   name: '',
   avatar: '',
   introduction: '',
-  roles: []
+  roles: [],
+  user: {}
 }
 
 const mutations = {
+  SET_USER: (state, user) => {
+    state.user = user
+  },
   SET_TOKEN: (state, token) => {
     state.token = token
   },
@@ -31,12 +36,11 @@ const mutations = {
 const actions = {
   // user login
   login({ commit }, userInfo) {
-    const { username, password } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
-        const { data } = response
-        commit('SET_TOKEN', data.token)
-        setToken(data.token)
+      login(userInfo).then(response => {
+        const { data } = response.data
+        commit('SET_TOKEN', data.access_token)
+        setToken(data.access_token, constants.TOKEN_KEY, data.expires_in)
         resolve()
       }).catch(error => {
         reject(error)
@@ -45,25 +49,22 @@ const actions = {
   },
 
   // get user info
-  getInfo({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      getInfo(state.token).then(response => {
-        const { data } = response
-
+  async getInfo({ commit, state }) {
+    return await new Promise((resolve, reject) => {
+      getInfo().then(response => {
+        const data = response.data.data
         if (!data) {
           reject('Verification failed, please Login again.')
         }
-
-        const { roles, name, avatar, introduction } = data
-
-        // roles must be a non-empty array
-        if (!roles || roles.length <= 0) {
-          reject('getInfo: roles must be a non-null array!')
+        if (data.roles && data.roles.length > 0) { // 验证返回的roles是否是一个非空数组
+          commit('SET_ROLES', data.roles)
+        } else {
+          reject('getInfo: roles must be a non-null array !')
         }
-        commit('SET_ROLES', roles)
-        commit('SET_NAME', name)
-        commit('SET_AVATAR', avatar)
-        commit('SET_INTRODUCTION', introduction)
+
+        commit('SET_USER', data.user)
+        commit('SET_NAME', data.user.name)
+        commit('SET_AVATAR', data.user.avatar)
         resolve(data)
       }).catch(error => {
         reject(error)
@@ -74,7 +75,7 @@ const actions = {
   // user logout
   logout({ commit, state, dispatch }) {
     return new Promise((resolve, reject) => {
-      logout(state.token).then(() => {
+      logout().then(() => {
         commit('SET_TOKEN', '')
         commit('SET_ROLES', [])
         removeToken()

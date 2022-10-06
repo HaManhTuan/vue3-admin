@@ -6,14 +6,14 @@
         <h3 class="title">Login Form</h3>
       </div>
 
-      <el-form-item prop="username">
+      <el-form-item prop="username" :error="errors.email">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
         <el-input
           ref="username"
-          v-model="loginForm.username"
-          placeholder="Username"
+          v-model="loginForm.email"
+          placeholder="Email"
           name="username"
           type="text"
           tabindex="1"
@@ -22,7 +22,7 @@
       </el-form-item>
 
       <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
-        <el-form-item prop="password">
+        <el-form-item prop="password" :error="errors.password">
           <span class="svg-container">
             <svg-icon icon-class="password" />
           </span>
@@ -76,9 +76,11 @@
 <script>
 import { validUsername } from '@/utils/validate'
 import SocialSign from './components/SocialSignin'
+import messageUtils from "@/mixins/messageUtils";
 
 export default {
   name: 'Login',
+  mixins: [messageUtils],
   components: { SocialSign },
   data() {
     const validateUsername = (rule, value, callback) => {
@@ -97,11 +99,12 @@ export default {
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        email: null,
+        password: null,
+        is_remember: true
       },
       loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
+        email: [{ required: true, trigger: 'blur' }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
       passwordType: 'password',
@@ -161,9 +164,12 @@ export default {
               this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
               this.loading = false
             })
-            .catch(() => {
+            .catch((err) => {
               this.loading = false
-            })
+              if (err.data.errors) this.errors = err.data.errors
+            }).finally(() => {
+            this.loading = false
+          })
         } else {
           console.log('error submit!!')
           return false

@@ -189,3 +189,25 @@ aside {
 .multiselect--active {
   z-index: 1000 !important;
 }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  word-break: break-word;
+  font-family: $font-secondary;
+  line-height: 1.4074;
+  color: $bs-gray-900;
+}
+.title-area{
+  align-items: center;
+  justify-content: space-between;
+  display: flex;
+  .btn-add {
+    height: 45px;
+    margin-left: 100px;
+  }
+}
+

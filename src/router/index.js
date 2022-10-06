@@ -165,14 +165,15 @@ export const asyncRoutes = [
   },
 
   {
-    path: '/icon',
+    path: '/category',
     component: () => import('@/layout/index'),
     children: [
       {
         path: 'index',
-        component: () => import('@/views/icons/index'),
+        component: () => import('@/views/category/index'),
         name: 'Icons',
-        meta: { title: 'Icons', icon: 'icon', noCache: true }
+        meta: { title: 'Category', icon: 'icon', noCache: true },
+        roles: ['admin']
       }
     ]
   },
